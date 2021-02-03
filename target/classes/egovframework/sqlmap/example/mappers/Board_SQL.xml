@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.example.board.service.impl.BoardMapper">
+
+	<resultMap id="board" type="egovframework.example.board.service.BoardVO">
+		<result property="idx" column="idx"/>
+		<result property="title" column="title"/>
+		<result property="contents" column="contents"/>
+		<result property="writer" column="writer"/>
+		<result property="writerNm" column="writerNm"/>
+		<result property="indate" column="indate"/>
+	</resultMap>
+
+	<insert id="insertBoard" parameterType="boardVO">
+
+			INSERT INTO TB_BOARD
+				( IDX
+				  , TITLE
+				  , CONTENTS
+				  , COUNT
+				  , WRITER
+				  , INDATE )
+			VALUES ( #{idx, jdbcType=VARCHAR}
+				  , #{title, jdbcType=VARCHAR}
+				  , #{contents, jdbcType=VARCHAR}
+				  , #{count, jdbcType=VARCHAR}
+				  , #{writer, jdbcType=VARCHAR}
+				  , SYSDATE() )
+
+	</insert>
+
+	<update id="updateBoard">
+
+			UPDATE TB_BOARD
+			SET TITLE=#{title, jdbcType=VARCHAR}
+				, CONTENTS=#{contents, jdbcType=VARCHAR}
+				  WHERE IDx=#{idx}
+
+	</update>
+
+	<delete id="deleteBoard">
+
+			DELETE FROM TB_BOARD
+			WHERE IDx=#{idx}
+
+	</delete>
+
+	<select id="selectBoard" resultMap="board">
+
+			SELECT
+				A.IDX as idx
+				  , A.TITLE as title
+				  , A.CONTENTS as contents
+				  , A.COUNT as count
+				  , A.WRITER as writer
+				  , A.INDATE as indate
+				  , B.USER_NAME as writerNm
+			FROM TB_BOARD A LEFT JOIN TB_USER B ON A.WRITER = B.USER_ID
+			WHERE A.IDx=#{idx}
+
+	</select>
+
+	<select id="selectBoardList" parameterType="boardVO" resultType="egovMap">
+
+			SELECT
+				A.IDX as idx
+				  , A.TITLE as title
+				  , A.CONTENTS as contents
+				  , A.COUNT as count
+				  , A.WRITER as writer
+				  , A.INDATE as indate
+				  , B.USER_NAME as writerNm
+			FROM TB_BOARD
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+		        <choose>
+		            <when test="searchCondition == 0">
+						AND	ID LIKE '%' || #{searchKeyword} || '%'
+					</when>
+		            <when test="searchCondition == 1">
+						AND	NAME LIKE '%' || #{searchKeyword} || '%'
+					</when>
+				</choose>
+			</if>
+			ORDER BY IDX DESC
+			<!-- LIMIT #{recordCountPerPage} OFFSET #{firstIndex} -->
+	</select>
+	
+	<select id="selectBoardListTotCnt" parameterType="boardVO" resultType="int">
+
+			SELECT COUNT(*) totcnt
+			FROM TB_BOARD
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+		        <choose>
+		            <when test="searchCondition == 0">
+						AND ID LIKE '%' || #{searchKeyword} || '%'
+					</when>
+		            <when test="searchCondition == 1">
+						AND	NAME LIKE '%' || #{searchKeyword} || '%'
+					</when>
+				</choose>
+			</if>
+	</select>
+	
+	<select id="selectLoginCheck" parameterType="boardVO" resultType="String">
+
+			SELECT USER_NAME
+			FROM TB_USER
+			WHERE 1=1
+			AND USER_ID LIKE #{userId}
+			AND	PASSWORD = #{password}
+					
+	</select>
+
+</mapper>
